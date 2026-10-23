@@ -39,7 +39,7 @@ final class SystemStatsManager: ObservableObject {
         pollTask = nil
     }
 
-    private func sample() {
+    func sample() {
         cpuUsage = cpuLoad()
         memoryUsage = memoryLoad()
     }

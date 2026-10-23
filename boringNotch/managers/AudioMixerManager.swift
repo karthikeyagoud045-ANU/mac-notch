@@ -43,8 +43,10 @@ final class AudioMixerManager: ObservableObject {
 
     deinit {
         pollTask?.cancel()
-        for (_, tapID) in activeTaps {
-            AudioHardwareDestroyProcessTap(tapID)
+        if #available(macOS 14.2, *) {
+            for (_, tapID) in activeTaps {
+                AudioHardwareDestroyProcessTap(tapID)
+            }
         }
     }
 
@@ -119,6 +121,8 @@ final class AudioMixerManager: ObservableObject {
 
     // MARK: - CoreAudio Process Tap (macOS 14.2+)
     private func updateProcessTap(for pid: pid_t, audioID: AudioObjectID, muted: Bool) {
+        guard #available(macOS 14.2, *) else { return }
+
         if let existingTap = activeTaps[pid] {
             AudioHardwareDestroyProcessTap(existingTap)
             activeTaps.removeValue(forKey: pid)
