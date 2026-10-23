@@ -57,7 +57,7 @@ final class ClipboardHistoryManager: ObservableObject {
         loadHistory()
         startPolling()
         #if DEBUG
-        Self.selfCheck()
+        selfCheck()
         #endif
     }
 
@@ -202,22 +202,21 @@ final class ClipboardHistoryManager: ObservableObject {
 
 #if DEBUG
 extension ClipboardHistoryManager {
-    static func selfCheck() {
-        let m = ClipboardHistoryManager.shared
-        let original = m.history
-        m.history = []
+    func selfCheck() {
+        let original = history
+        history = []
         for i in 0..<5 {
-            m.enqueue(text: "item \(i)", kind: "text")
+            enqueue(text: "item \(i)", kind: "text")
         }
-        assert(m.history.count == 5, "Expected 5 items")
-        assert(m.history.first?.text == "item 4", "Expected most recent first")
-        if let item = m.history.first {
-            m.deleteItem(item)
-            assert(m.history.count == 4, "Expected 4 items after delete")
+        assert(history.count == 5, "Expected 5 items")
+        assert(history.first?.text == "item 4", "Expected most recent first")
+        if let item = history.first {
+            deleteItem(item)
+            assert(history.count == 4, "Expected 4 items after delete")
         }
-        m.clearAll()
-        assert(m.history.isEmpty, "Expected empty history after clearAll")
-        m.history = original
+        clearAll()
+        assert(history.isEmpty, "Expected empty history after clearAll")
+        history = original
     }
 }
 #endif
