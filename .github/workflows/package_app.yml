@@ -1,0 +1,37 @@
+name: "Build and Package App"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build Boring Notch
+    runs-on: macos-15
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build App
+        run: |
+          xcodebuild -project boringNotch.xcodeproj \
+            -scheme boringNotch \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CONFIGURATION_BUILD_DIR="${RUNNER_TEMP}/build" \
+            clean build
+
+      - name: Zip App
+        run: |
+          cd "${RUNNER_TEMP}/build"
+          zip -r -y "${GITHUB_WORKSPACE}/boringNotch.app.zip" "boringNotch.app"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: boringNotch-app
+          path: boringNotch.app.zip
