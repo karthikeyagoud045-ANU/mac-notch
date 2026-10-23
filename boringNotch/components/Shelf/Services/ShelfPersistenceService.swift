@@ -7,6 +7,7 @@
 
 import CloudKit
 import Foundation
+import Security
 
 // Access model types
 @_exported import struct Foundation.URL
@@ -117,7 +118,23 @@ final class ShelfPersistenceService {
     }
 
     // MARK: - CloudKit Sync Layer
+    private var isCloudKitAvailable: Bool {
+        guard FileManager.default.ubiquityIdentityToken != nil else { return false }
+        guard let task = SecTaskCreateFromSelf(nil) else { return false }
+        if SecTaskCopyValueForEntitlement(task, "com.apple.developer.icloud-services" as CFString, nil) != nil {
+            return true
+        }
+        if SecTaskCopyValueForEntitlement(task, "com.apple.developer.icloud-container-identifiers" as CFString, nil) != nil {
+            return true
+        }
+        return false
+    }
+
     func syncToCloudKit(items: [ShelfItem]) {
+        guard isCloudKitAvailable else {
+            NSLog("[CloudKit] CloudKit sync skipped: missing iCloud account or entitlements (operating in local-first mode)")
+            return
+        }
         guard !isSyncing else { return }
         isSyncing = true
 
@@ -143,6 +160,7 @@ final class ShelfPersistenceService {
     }
 
     func fetchFromCloudKit() async -> [ShelfItem]? {
+        guard isCloudKitAvailable else { return nil }
         let database = CKContainer.default().privateCloudDatabase
         let recordID = CKRecord.ID(recordName: "ShelfGlobalState")
         do {
